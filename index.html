@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal VIII-B - SMPN 1 Atinggola</title>
+    <style>
+        /* ============================
+           CSS VARIABLES & RESET
+           ============================ */
+        :root {
+            --primary: #FF9966;
+            --secondary: #FF5E62;
+            --accent: #FFC371;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --white: #ffffff;
+            --shadow: 0 10px 20px rgba(0,0,0,0.1);
+            --radius: 15px;
+            --font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font); outline: none; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background: linear-gradient(135deg, var(--light) 0%, #dfe6e9 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: 80px; /* Space for nav if needed */
+        }
+
+        /* ============================
+           UTILITIES & ANIMATIONS
+           ============================ */
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .slide-up { animation: slideUp 0.5s ease-out forwards; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .btn {
+            padding: 10px 20px; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; transition: 0.3s;
+            background: linear-gradient(to right, var(--primary), var(--secondary)); color: var(--white);
+            box-shadow: 0 4px 15px rgba(255, 94, 98, 0.4); text-align: center; display: inline-block;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-danger { background: linear-gradient(to right, #e74c3c, #c0392b); box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4); }
+        .btn-small { padding: 5px 10px; font-size: 0.8rem; }
+
+        input, select, textarea {
+            width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px;
+            background: var(--white); transition: 0.3s;
+        }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 8px rgba(255, 153, 102, 0.3); }
+
+        .card {
+            background: var(--white); padding: 20px; border-radius: var(--radius);
+            box-shadow: var(--shadow); margin-bottom: 20px; position: relative; overflow: hidden;
+        }
+
+        /* ============================
+           LOGIN SECTION
+           ============================ */
+        #login-section {
+            height: 100vh; display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 20px;
+        }
+        .login-box {
+            background: var(--white); padding: 30px; border-radius: 20px; width: 100%; max-width: 400px;
+            text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+        .login-box h2 { color: var(--secondary); margin-bottom: 10px; }
+        .pass-wrapper { position: relative; }
+        .toggle-pass {
+            position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888;
+        }
+
+        /* ============================
+           DASHBOARD & NAV
+           ============================ */
+        header {
+            background: linear-gradient(to right, var(--primary), var(--secondary)); color: white;
+            padding: 20px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px;
+            box-shadow: var(--shadow); text-align: center; position: sticky; top: 0; z-index: 100;
+        }
+        header h1 { font-size: 1.2rem; margin-bottom: 5px; }
+        header p { font-size: 0.9rem; opacity: 0.9; }
+
+        .nav-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px;
+        }
+        .nav-item {
+            background: var(--white); padding: 20px; border-radius: 15px; text-align: center;
+            box-shadow: var(--shadow); cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center;
+        }
+        .nav-item:active { transform: scale(0.95); background: #fff5f0; }
+        .nav-icon { font-size: 2rem; margin-bottom: 10px; }
+
+        /* ============================
+           STRUCTURE (VISUAL TREE)
+           ============================ */
+        .org-chart { display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 20px 0; }
+        .org-node {
+            background: var(--white); padding: 10px; border-radius: 10px; text-align: center;
+            width: 140px; border: 2px solid var(--primary); position: relative; box-shadow: var(--shadow);
+            transition: 0.3s;
+        }
+        .org-node:hover { transform: translateY(-5px); }
+        .org-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-bottom: 5px; border: 2px solid #ddd; }
+        .org-role { font-size: 0.8rem; font-weight: bold; color: var(--secondary); }
+        .org-name { font-size: 0.9rem; }
+        
+        /* Connecting Lines */
+        .line-vertical { width: 2px; background: var(--dark); height: 20px; margin: 0 auto; }
+        .line-horizontal { height: 2px; background: var(--dark); width: 50%; margin: 0 auto; }
+        .row-flex { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; width: 100%; }
+
+        /* ============================
+           SCHEDULE & TABLE
+           ============================ */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        th, td { border: 1px solid #eee; padding: 10px; text-align: center; }
+        th { background: var(--accent); color: white; }
+        tr:nth-child(even) { background: #fafafa; }
+
+        /* ============================
+           GALLERY
+           ============================ */
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+        .gallery-item { position: relative; height: 100px; border-radius: 10px; overflow: hidden; cursor: pointer; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+        .gallery-item:hover img { transform: scale(1.1); }
+
+        /* ============================
+           ID CARD & MEMBERS
+           ============================ */
+        .id-card-preview {
+            background: linear-gradient(135deg, #fff, #f0f0f0); border: 2px solid var(--primary);
+            border-radius: 15px; padding: 20px; display: flex; gap: 15px; align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); max-width: 350px; margin: 0 auto; position: relative;
+        }
+        .id-card-photo { width: 80px; height: 100px; background: #ddd; object-fit: cover; border-radius: 5px; }
+        .id-card-info h3 { color: var(--secondary); margin-bottom: 5px; font-size: 1.1rem; }
+        .id-card-info p { font-size: 0.8rem; margin: 2px 0; color: #555; }
+        .member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; }
+        .member-card { text-align: center; padding: 10px; cursor: pointer; }
+        .member-card img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-bottom: 5px; }
+
+        /* ============================
+           FORUM
+           ============================ */
+        .chat-box { max-height: 400px; overflow-y: auto; background: #fff; padding: 10px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #eee; }
+        .msg { margin-bottom: 10px; padding: 8px 12px; border-radius: 15px; max-width: 80%; font-size: 0.9rem; position: relative; }
+        .msg-own { background: var(--primary); color: white; margin-left: auto; border-bottom-right-radius: 2px; }
+        .msg-other { background: #eee; color: var(--dark); margin-right: auto; border-bottom-left-radius: 2px; }
+        .msg-meta { font-size: 0.6rem; opacity: 0.7; margin-top: 4px; display: block; }
+        .msg-admin-info { font-size: 0.6rem; color: yellow; display: block; margin-bottom: 2px; }
+
+        /* ============================
+           MODAL
+           ============================ */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
+            display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+        }
+        .modal-content {
+            background: white; width: 100%; max-width: 500px; border-radius: 15px; padding: 20px;
+            position: relative; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s;
+        }
+        .close-modal { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #aaa; }
+        .full-img { width: 100%; border-radius: 10px; margin-bottom: 10px; }
+
+        /* OWNER CONTROLS */
+        .owner-control { border: 2px dashed var(--secondary); padding: 10px; margin: 10px 0; background: #fff0f0; border-radius: 10px; }
+        .owner-tag { background: red; color: white; padding: 2px 5px; font-size: 0.7rem; border-radius: 4px; vertical-align: middle; }
+
+    </style>
+</head>
+<body>
+
+    <section id="login-section">
+        <div class="login-box fade-in">
+            <h2>SMPN 1 Atinggola</h2>
+            <p>Portal Kelas VIII-B</p>
+            <br>
+            <input type="text" id="login-nick" placeholder="Nickname / Username">
+            <div class="pass-wrapper">
+                <input type="password" id="login-pass" placeholder="Password">
+                <span class="toggle-pass" onclick="togglePass('login-pass')">👁️</span>
+            </div>
+            <br>
+            <button class="btn" onclick="handleLogin()">Masuk / Daftar</button>
+            <p style="margin-top:15px; font-size:0.8rem; color:#666;">
+                *Nickname baru = Otomatis Daftar<br>
+                *Nickname lama = Login
+            </p>
+        </div>
+    </section>
+
+    <div id="app" class="hidden">
+        
+        <header>
+            <h1>KELAS VIII-B</h1>
+            <p>SMP Negeri 1 Atinggola</p>
+            <div id="user-greeting" style="margin-top:5px; font-size:0.8rem; font-weight:bold;"></div>
+        </header>
+
+        <div style="padding: 20px;">
+            
+            <div id="sec-dashboard" class="fade-in">
+                <div class="nav-grid">
+                    <div class="nav-item" onclick="navTo('sec-schedule')">
+                        <div class="nav-icon">📅</div>
+                        <span>Jadwal Mapel</span>
+                    </div>
+                    <div class="nav-item" onclick="navTo('sec-structure')">
+                        <div class="nav-icon">🌳</div>
+                        <span>Struktur Kelas</span>
+                    </div>
+                    <div class="nav-item" onclick="navTo('sec-members')">
+                        <div class="nav-icon">👥</div>
+                        <span>Anggota</span>
+                    </div>
+                    <div class="nav-item" onclick="navTo('sec-gallery')">
+                        <div class="nav-icon">🖼️</div>
+                        <span>Galeri</span>
+                    </div>
+                    <div class="nav-item" onclick="navTo('sec-forum')">
+                        <div class="nav-icon">💬</div>
+                        <span>Forum</span>
+                    </div>
+                    <div class="nav-item" onclick="navTo('sec-idcard')">
+                        <div class="nav-icon">🆔</div>
+                        <span>ID Card Saya</span>
+                    </div>
+                    <div class="nav-item" onclick="navTo('sec-account')">
+                        <div class="nav-icon">👤</div>
+                        <span>Akun Saya</span>
+                    </div>
+                    <div class="nav-item owner-only hidden" onclick="navTo('sec-admin')">
+                        <div class="nav-icon">⚙️</div>
+                        <span>Owner Menu</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sec-schedule" class="hidden slide-up">
+                <div class="card">
+                    <h3>📅 Jadwal Pelajaran</h3>
+                    <div class="owner-control owner-only hidden">
+                        <p><b>Edit Mode:</b> Klik tombol di bawah untuk reset/edit jadwal default.</p>
+                        <button class="btn btn-small" onclick="resetSchedule()">Reset Default</button>
+                    </div>
+                    <div id="schedule-container">
+                        </div>
+                    <br>
+                    <button class="btn" onclick="navTo('sec-dashboard')">Kembali</button>
+                </div>
+            </div>
+
+            <div id="sec-structure" class="hidden slide-up">
+                <div class="card" style="overflow-x: auto;">
+                    <h3>🌳 Struktur Organisasi</h3>
+                    <p style="font-size:0.8rem; color:#666;">Klik box untuk melihat detail (Owner edit via menu ini).</p>
+                    <br>
+                    <div class="org-chart" id="org-container">
+                        </div>
+                    <br>
+                    <button class="btn" onclick="navTo('sec-dashboard')">Kembali</button>
+                </div>
+            </div>
+
+            <div id="sec-members" class="hidden slide-up">
+                <div class="card">
+                    <h3>👥 Anggota Kelas</h3>
+                    <p style="margin-bottom:15px;">Klik nama untuk melihat ID Card.</p>
+                    <div class="member-grid" id="member-list">
+                        </div>
+                    <br>
+                    <button class="btn" onclick="navTo('sec-dashboard')">Kembali</button>
+                </div>
+            </div>
+
+            <div id="sec-gallery" class="hidden slide-up">
+                <div class="card">
+                    <h3>🖼️ Galeri Kelas</h3>
+                    
+                    <div class="owner-control owner-only hidden">
+                        <h4>Upload Foto</h4>
+                        <input type="file" id="gallery-input" accept="image/*">
+                        <input type="text" id="gallery-title" placeholder="Judul Foto">
+                        <textarea id="gallery-desc" placeholder="Deskripsi..."></textarea>
+                        <button class="btn btn-small" onclick="uploadGallery()">Upload</button>
+                    </div>
+
+                    <div class="gallery-grid" id="gallery-container">
+                        </div>
+                    <br>
+                    <button class="btn" onclick="navTo('sec-dashboard')">Kembali</button>
+                </div>
+            </div>
+
+            <div id="sec-forum" class="hidden slide-up">
+                <div class="card">
+                    <h3>💬 Forum Anonim</h3>
+                    <div class="chat-box" id="chat-container">
+                        </div>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="chat-input" placeholder="Ketik pesan..." style="margin:0;">
+                        <button class="btn btn-small" onclick="sendChat()">➤</button>
+                    </div>
+                    <br>
+                    <button class="btn" onclick="navTo('sec-dashboard')">Kembali</button>
+                </div>
+            </div>
+
+            <div id="sec-idcard" class="hidden slide-up">
+                <div class="card">
+                    <h3>🆔 Generator ID Card</h3>
+                    
+                    <div id="idcard-form">
+                        <input type="text" id="idc-name" placeholder="Nama Lengkap">
+                        <input type="text" value="VIII-B" readonly style="background:#eee;">
+                        <input type="number" id="idc-age" placeholder="Umur">
+                        <input type="date" id="idc-dob">
+                        <input type="text" id="idc-origin" placeholder="Asal / Alamat">
+                        <input type="text" id="idc-hobby" placeholder="Hobi">
+                        <input type="text" id="idc-role" placeholder="Jabatan (Siswa/Ketua/dll)">
+                        <label>Foto Profil:</label>
+                        <input type="file" id="idc-photo-input" accept="image/*">
+                        <button class="btn" onclick="generateIDCard()">Simpan & Buat</button>
+                    </div>
+
+                    <br>
+                    <div id="idcard-preview-area" class="hidden">
+                        <div class="id-card-preview" id="my-id-card">
+                            <img src="" class="id-card-photo" id="idc-display-img">
+                            <div class="id-card-info">
+                                <h3 id="idc-display-name">Nama</h3>
+                                <p>🎂 <span id="idc-display-dob"></span> (<span id="idc-display-age"></span> thn)</p>
+                                <p>🏠 <span id="idc-display-origin"></span></p>
+                                <p>⭐ <span id="idc-display-hobby"></span></p>
+                                <p>💼 <span id="idc-display-role"></span></p>
+                                <p>🏫 <b>SMPN 1 Atinggola</b></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <br>
+                    <button class="btn" onclick="navTo('sec-dashboard')">Kembali</button>
+                </div>
+            </div>
+
+            <div id="sec-account" class="hidden slide-up">
+                <div class="card" style="text-align:center;">
+                    <h3>👤 Akun Saya</h3>
+                    <h2 id="acc-nickname" style="color:var(--primary);">User</h2>
+                    <p id="acc-role" style="color:#888;">Member</p>
+                    <br>
+                    <div id="acc-idcard-container">
+                        <p>Belum membuat ID Card.</p>
+                    </div>
+                    <br>
+                    <button class="btn btn-danger" onclick="logout()">Logout</button>
+                    <br><br>
+                    <button class="btn" onclick="navTo('sec-dashboard')">Kembali</button>
+                </div>
+            </div>
+
+            <div id="sec-admin" class="hidden slide-up">
+                <div class="card">
+                    <h3>⚙️ Owner Panel</h3>
+                    <p>Halo Ahmad, ini kontrol penuh sistem.</p>
+                    
+                    <h4>📜 Log Login</h4>
+                    <div style="max-height:150px; overflow-y:auto; background:#eee; padding:5px; font-size:0.8rem; margin-bottom:10px;" id="admin-logs"></div>
+
+                    <h4>👥 Manajemen Akun</h4>
+                    <table id="admin-user-table">
+                        <thead><tr><th>Nick</th><th>Pass</th><th>Role</th><th>Act</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                    
+                    <br>
+                    <button class="btn" onclick="navTo('sec-dashboard')">Kembali</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="global-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // 1. DATABASE & CONFIG
+        // ============================================
+        const OWNER_NICK = "AHMAD1016";
+        const OWNER_PASS = "MADD16";
+        
+        // Data Structure helpers
+        const getLS = (key, def) => JSON.parse(localStorage.getItem(key) || JSON.stringify(def));
+        const setLS = (key, val) => localStorage.setItem(key, JSON.stringify(val));
+
+        // State
+        let users = getLS('v8b_users', []);
+        let currentUser = localStorage.getItem('v8b_currentUser');
+        let schedule = getLS('v8b_schedule', generateDefaultSchedule());
+        let structure = getLS('v8b_structure', generateDefaultStructure());
+        let gallery = getLS('v8b_gallery', []);
+        let chats = getLS('v8b_chats', []);
+        let logs = getLS('v8b_logs', []);
+
+        // ============================================
+        // 2. INITIALIZATION & AUTH
+        // ============================================
+        function init() {
+            // Ensure Owner Exists
+            const ownerExists = users.find(u => u.nick === OWNER_NICK);
+            if (!ownerExists) {
+                users.push({ nick: OWNER_NICK, pass: OWNER_PASS, role: 'OWNER', idData: null });
+                setLS('v8b_users', users);
+            }
+
+            // Auto Login Check
+            if (currentUser) {
+                showApp();
+            } else {
+                document.getElementById('login-section').classList.remove('hidden');
+                document.getElementById('app').classList.add('hidden');
+            }
+        }
+
+        function handleLogin() {
+            const nickInput = document.getElementById('login-nick').value.trim().toUpperCase();
+            const passInput = document.getElementById('login-pass').value;
+
+            if (!nickInput || !passInput) return alert("Isi semua data!");
+
+            const user = users.find(u => u.nick === nickInput);
+
+            if (user) {
+                // Login existing
+                if (user.pass === passInput) {
+                    loginSuccess(user);
+                } else {
+                    alert("Password salah!");
+                }
+            } else {
+                // Register new member
+                if (confirm(`Nickname '${nickInput}' belum ada. Buat akun baru?`)) {
+                    const newUser = { nick: nickInput, pass: passInput, role: 'MEMBER', idData: null };
+                    users.push(newUser);
+                    setLS('v8b_users', users);
+                    loginSuccess(newUser);
+                }
+            }
+        }
+
+        function loginSuccess(user) {
+            currentUser = user.nick;
+            localStorage.setItem('v8b_currentUser', currentUser);
+            
+            // Log
+            logs.unshift({ nick: user.nick, time: new Date().toLocaleString() });
+            setLS('v8b_logs', logs);
+
+            showApp();
+        }
+
+        function logout() {
+            localStorage.removeItem('v8b_currentUser');
+            location.reload();
+        }
+
+        function showApp() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            
+            const userObj = users.find(u => u.nick === currentUser);
+            document.getElementById('user-greeting').innerText = `Halo, ${userObj.nick} (${userObj.role})`;
+            
+            // Show/Hide Owner Elements
+            const ownerElements = document.querySelectorAll('.owner-only');
+            ownerElements.forEach(el => {
+                if(userObj.role === 'OWNER') el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+
+            // Initialize views
+            renderSchedule();
+            renderStructure();
+            renderGallery();
+            renderChat();
+            renderAdmin();
+            loadMyIDCard();
+        }
+
+        function togglePass(id) {
+            const el = document.getElementById(id);
+            el.type = el.type === 'password' ? 'text' : 'password';
+        }
+
+        // ============================================
+        // 3. NAVIGATION
+        // ============================================
+        function navTo(secId) {
+            const sections = ['sec-dashboard', 'sec-schedule', 'sec-structure', 'sec-members', 'sec-gallery', 'sec-forum', 'sec-idcard', 'sec-account', 'sec-admin'];
+            sections.forEach(s => document.getElementById(s).classList.add('hidden'));
+            document.getElementById(secId).classList.remove('hidden');
+            
+            if (secId === 'sec-members') renderMembers();
+            if (secId === 'sec-account') renderAccount();
+            if (secId === 'sec-admin') renderAdmin();
+        }
+
+        // ============================================
+        // 4. SCHEDULE (JADWAL)
+        // ============================================
+        function generateDefaultSchedule() {
+            return {
+                "SENIN": ["Upacara", "Matematika", "B.Indonesia", "IPA"],
+                "SELASA": ["PJOK", "PJOK", "B.Inggris", "PKN"],
+                "RABU": ["Seni Budaya", "IPS", "Prakarya", "Matematika"],
+                "KAMIS": ["B.Indonesia", "IPA", "Agama", "B.Inggris"],
+                "JUMAT": ["Senam", "B.Daerah", "Khotbah/Sholat", "Pulang"]
+            };
+        }
+
+        function resetSchedule() {
+            if(!confirm("Reset jadwal ke default?")) return;
+            schedule = generateDefaultSchedule();
+            setLS('v8b_schedule', schedule);
+            renderSchedule();
+        }
+
+        function renderSchedule() {
+            const container = document.getElementById('schedule-container');
+            let html = `<table><thead><tr><th>HARI</th><th>MAPEL</th></tr></thead><tbody>`;
+            
+            const isOwner = currentUser === OWNER_NICK;
+
+            for (let day in schedule) {
+                let mapelStr = schedule[day].join(", ");
+                // If owner, make editable
+                if (isOwner) {
+                    html += `<tr>
+                        <td><b>${day}</b></td>
+                        <td onclick="editSchedule('${day}')">${mapelStr} ✏️</td>
+                    </tr>`;
+                } else {
+                    html += `<tr><td><b>${day}</b></td><td>${mapelStr}</td></tr>`;
+                }
+            }
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function editSchedule(day) {
+            const newVal = prompt(`Edit Mapel ${day} (pisahkan koma):`, schedule[day].join(", "));
+            if (newVal) {
+                schedule[day] = newVal.split(",").map(s => s.trim());
+                setLS('v8b_schedule', schedule);
+                renderSchedule();
+            }
+        }
+
+        // ============================================
+        // 5. STRUCTURE (STRUKTUR KELAS)
+        // ============================================
+        function generateDefaultStructure() {
+            return {
+                top: { name: "Nama Guru", role: "WALI KELAS", img: "" },
+                mid1: { name: "Nama Siswa", role: "KETUA KELAS", img: "" },
+                mid2: { name: "Nama Siswa", role: "WAKIL KETUA", img: "" },
+                bot1: { name: "Nama Siswa", role: "SEKRETARIS", img: "" },
+                bot2: { name: "Nama Siswa", role: "BENDAHARA", img: "" }
+            };
+        }
+
+        function renderStructure() {
+            const container = document.getElementById('org-container');
+            const s = structure;
+            
+            // Helper to create node HTML
+            const node = (key, label) => `
+                <div class="org-node" onclick="editStructure('${key}')">
+                    <img src="${s[key].img || 'https://via.placeholder.com/60'}" class="org-img">
+                    <div class="org-role">${s[key].role}</div>
+                    <div class="org-name">${s[key].name}</div>
+                </div>`;
+
+            container.innerHTML = `
+                ${node('top')}
+                <div class="line-vertical"></div>
+                <div class="row-flex">
+                    ${node('mid1')}
+                    ${node('mid2')}
+                </div>
+                <div class="line-horizontal"></div>
+                <div class="line-vertical"></div>
+                <div class="row-flex">
+                    ${node('bot1')}
+                    ${node('bot2')}
+                </div>
+            `;
+        }
+
+        function editStructure(key) {
+            if (currentUser !== OWNER_NICK) return;
+            
+            // Simple edit flow
+            const newName = prompt("Nama Baru:", structure[key].name);
+            if (newName !== null) {
+                structure[key].name = newName;
+                const newRole = prompt("Jabatan Baru:", structure[key].role);
+                if (newRole) structure[key].role = newRole;
+                
+                // Photo upload trigger
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = e => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(evt) {
+                            structure[key].img = evt.target.result;
+                            setLS('v8b_structure', structure);
+                            renderStructure();
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        setLS('v8b_structure', structure);
+                        renderStructure();
+                    }
+                };
+                input.click();
+            }
+        }
+
+        // ============================================
+        // 6. GALLERY
+        // ============================================
+        function uploadGallery() {
+            const input = document.getElementById('gallery-input');
+            const title = document.getElementById('gallery-title').value;
+            const desc = document.getElementById('gallery-desc').value;
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    gallery.push({
+                        img: e.target.result,
+                        title: title || "Tanpa Judul",
+                        desc: desc || "",
+                        date: new Date().toLocaleDateString()
+                    });
+                    setLS('v8b_gallery', gallery);
+                    renderGallery();
+                    // Reset inputs
+                    input.value = ""; document.getElementById('gallery-title').value=""; document.getElementById('gallery-desc').value="";
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                alert("Pilih gambar dulu!");
+            }
+        }
+
+        function renderGallery() {
+            const container = document.getElementById('gallery-container');
+            container.innerHTML = "";
+            gallery.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'gallery-item';
+                div.innerHTML = `<img src="${item.img}">`;
+                div.onclick = () => openModalGallery(index);
+                container.appendChild(div);
+            });
+        }
+
+        function openModalGallery(index) {
+            const item = gallery[index];
+            const isOwner = currentUser === OWNER_NICK;
+            const deleteBtn = isOwner ? `<br><button class="btn btn-danger btn-small" onclick="deleteGallery(${index})">Hapus</button>` : '';
+
+            const content = `
+                <img src="${item.img}" class="full-img">
+                <h2>${item.title}</h2>
+                <p>${item.desc}</p>
+                <small>${item.date}</small>
+                ${deleteBtn}
+            `;
+            openModal(content);
+        }
+
+        function deleteGallery(index) {
+            if(confirm("Hapus foto ini?")) {
+                gallery.splice(index, 1);
+                setLS('v8b_gallery', gallery);
+                renderGallery();
+                closeModal();
+            }
+        }
+
+        // ============================================
+        // 7. FORUM
+        // ============================================
+        function sendChat() {
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            chats.push({
+                sender: currentUser,
+                msg: msg,
+                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            });
+            setLS('v8b_chats', chats);
+            input.value = "";
+            renderChat();
+        }
+
+        function renderChat() {
+            const container = document.getElementById('chat-container');
+            container.innerHTML = "";
+            
+            const isOwner = currentUser === OWNER_NICK;
+
+            chats.forEach((c, index) => {
+                const isMe = c.sender === currentUser;
+                const cls = isMe ? 'msg-own' : 'msg-other';
+                
+                // Owner sees real name, others see "Anonim" unless it's their own msg
+                let displayName = isMe ? "Saya" : "Anonim";
+                if (isOwner && !isMe) displayName = `${c.sender} (Anonim)`;
+                
+                // Delete button for owner
+                const delBtn = isOwner ? `<span onclick="deleteChat(${index})" style="color:red; cursor:pointer; margin-left:5px;">[x]</span>` : '';
+
+                const div = document.createElement('div');
+                div.className = `msg ${cls}`;
+                div.innerHTML = `
+                    ${isOwner ? `<span class="msg-admin-info">User: ${c.sender}</span>` : ''}
+                    ${c.msg} ${delBtn}
+                    <span class="msg-meta">${displayName} • ${c.time}</span>
+                `;
+                container.appendChild(div);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function deleteChat(index) {
+            if(confirm("Hapus pesan?")) {
+                chats.splice(index, 1);
+                setLS('v8b_chats', chats);
+                renderChat();
+            }
+        }
+
+        // ============================================
+        // 8. ID CARD & MEMBERS
+        // ============================================
+        function generateIDCard() {
+            const name = document.getElementById('idc-name').value;
+            const age = document.getElementById('idc-age').value;
+            const dob = document.getElementById('idc-dob').value;
+            const origin = document.getElementById('idc-origin').value;
+            const hobby = document.getElementById('idc-hobby').value;
+            const role = document.getElementById('idc-role').value;
+            const fileInput = document.getElementById('idc-photo-input');
+
+            if(!name || !age) return alert("Lengkapi data minimal!");
+
+            const processSave = (imgSrc) => {
+                const idData = { name, age, dob, origin, hobby, role, img: imgSrc || "" };
+                
+                // Update user data
+                const uIdx = users.findIndex(u => u.nick === currentUser);
+                users[uIdx].idData = idData;
+                setLS('v8b_users', users);
+
+                // Show Preview
+                renderIDCardPreview(idData);
+                document.getElementById('idcard-preview-area').classList.remove('hidden');
+                alert("ID Card Berhasil dibuat!");
+            };
+
+            if (fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => processSave(e.target.result);
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                // Keep old photo if exists
+                const existing = users.find(u => u.nick === currentUser).idData;
+                processSave(existing ? existing.img : "");
+            }
+        }
+
+        function renderIDCardPreview(data) {
+            document.getElementById('idc-display-name').innerText = data.name;
+            document.getElementById('idc-display-age').innerText = data.age;
+            document.getElementById('idc-display-dob').innerText = data.dob;
+            document.getElementById('idc-display-origin').innerText = data.origin;
+            document.getElementById('idc-display-hobby').innerText = data.hobby;
+            document.getElementById('idc-display-role').innerText = data.role;
+            if(data.img) document.getElementById('idc-display-img').src = data.img;
+        }
+
+        function loadMyIDCard() {
+            const u = users.find(u => u.nick === currentUser);
+            if (u && u.idData) {
+                // Pre-fill form
+                document.getElementById('idc-name').value = u.idData.name;
+                document.getElementById('idc-age').value = u.idData.age;
+                // Render preview
+                renderIDCardPreview(u.idData);
+                document.getElementById('idcard-preview-area').classList.remove('hidden');
+            }
+        }
+
+        function renderMembers() {
+            const container = document.getElementById('member-list');
+            container.innerHTML = "";
+            
+            users.forEach(u => {
+                if(u.role === 'OWNER') return; // Optional: hide owner from member list or keep it
+                
+                const hasID = u.idData != null;
+                const img = hasID && u.idData.img ? u.idData.img : 'https://via.placeholder.com/60';
+                const name = hasID ? u.idData.name : u.nick;
+
+                const div = document.createElement('div');
+                div.className = 'card member-card';
+                div.innerHTML = `
+                    <img src="${img}">
+                    <p><b>${name}</b></p>
+                    <small>${u.role}</small>
+                `;
+                div.onclick = () => openMemberModal(u.nick);
+                container.appendChild(div);
+            });
+        }
+
+        function openMemberModal(nick) {
+            const u = users.find(u => u.nick === nick);
+            if (!u.idData) return alert("Member ini belum buat ID Card.");
+
+            // Owner sees password details
+            const adminDetails = (currentUser === OWNER_NICK) 
+                ? `<div class="owner-control">User: ${u.nick}<br>Pass: ${u.pass}</div>` 
+                : '';
+
+            const content = `
+                <div class="id-card-preview" style="transform:scale(0.9); margin:0;">
+                    <img src="${u.idData.img}" class="id-card-photo">
+                    <div class="id-card-info">
+                        <h3>${u.idData.name}</h3>
+                        <p>🎂 ${u.idData.dob}</p>
+                        <p>🏠 ${u.idData.origin}</p>
+                        <p>⭐ ${u.idData.hobby}</p>
+                        <p>💼 ${u.idData.role}</p>
+                    </div>
+                </div>
+                ${adminDetails}
+            `;
+            openModal(content);
+        }
+
+        function renderAccount() {
+            const u = users.find(u => u.nick === currentUser);
+            document.getElementById('acc-nickname').innerText = u.nick;
+            document.getElementById('acc-role').innerText = u.role;
+            
+            const cont = document.getElementById('acc-idcard-container');
+            if(u.idData) {
+                cont.innerHTML = "";
+                const clone = document.getElementById('my-id-card').cloneNode(true);
+                clone.style.margin = "0 auto";
+                cont.appendChild(clone);
+            }
+        }
+
+        // ============================================
+        // 9. ADMIN PANEL
+        // ============================================
+        function renderAdmin() {
+            if (currentUser !== OWNER_NICK) return;
+
+            // Logs
+            const logCont = document.getElementById('admin-logs');
+            logCont.innerHTML = logs.map(l => `<div>[${l.time}] ${l.nick} logged in</div>`).join('');
+
+            // Users
+            const tbody = document.querySelector('#admin-user-table tbody');
+            tbody.innerHTML = "";
+            users.forEach((u, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${u.nick}</td>
+                        <td>${u.pass}</td>
+                        <td>${u.role}</td>
+                        <td>
+                            ${u.role !== 'OWNER' ? `<button class="btn btn-danger btn-small" onclick="deleteUser(${idx})">X</button>` : '-'}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function deleteUser(idx) {
+            if(confirm("Hapus user ini permanen?")) {
+                users.splice(idx, 1);
+                setLS('v8b_users', users);
+                renderAdmin();
+            }
+        }
+
+        // ============================================
+        // 10. GLOBAL UTILS
+        // ============================================
+        function openModal(htmlContent) {
+            document.getElementById('modal-body').innerHTML = htmlContent;
+            document.getElementById('global-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('global-modal').classList.add('hidden');
+        }
+
+        // START APP
+        init();
+
+    </script>
+</body>
+</html>
+
